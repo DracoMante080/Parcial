@@ -69,6 +69,7 @@ function getBuildingData() {
     }
 }
 
+
 function drawElement(xPos, floors, color, wireframe) {
 
     var floorHeight = 1.5;
