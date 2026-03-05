@@ -1,9 +1,7 @@
-var scene    = null,
-    camara   = null,
-    render   = null,
+var scene = null,
+    camera = null,
+    renderer = null,
     controls = null;
-
-var cube = null;
 
 function start() {
     window.onresize = onWindowResize;
@@ -12,40 +10,36 @@ function start() {
 }
 
 function initScene() {
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color( 0xe0e0d1 );
 
-    camera = new THREE.PerspectiveCamera( 
-        75,                                     // Ángulo "grabación" - De abaja -> Arriba 
-        window.innerWidth / window.innerHeight, // Relación de aspecto 16:9
-        0.1,                                    // Mas cerca (no renderiza) 
-        1000                                    // Mas lejos (no renderiza)
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xe0e0d1);
+
+    camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
     );
 
-    // renderer = new THREE.WebGLRenderer();
     renderer = new THREE.WebGLRenderer({ canvas: document.querySelector("#app") });
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    document.body.appendChild( renderer.domElement );
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
-    controls = new THREE.OrbitControls( camera, renderer.domElement );
-    camera.position.set( 0, 1, 2 );
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+    camera.position.set(5, 6, 10);
     controls.update();
 
-    // Grid Creation 
-    var size = 50;
-    var divisions = 50;
+    var gridHelper = new THREE.GridHelper(50, 50);
+    scene.add(gridHelper);
 
-    var gridHelper = new THREE.GridHelper( size, divisions );
-    scene.add( gridHelper );
-
-    var axesHelper = new THREE.AxesHelper( 1 );
-    scene.add( axesHelper );
+    var axesHelper = new THREE.AxesHelper(5);
+    scene.add(axesHelper);
 }
 
 function animate() {
-    requestAnimationFrame( animate );
-	controls.update();
-	renderer.render( scene, camera );
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
 }
 
 function onWindowResize() {
@@ -55,31 +49,66 @@ function onWindowResize() {
 }
 
 function getBuildingData() {
-    var message = 'Ingrese el número de edificios a crear: ';
-    var datas = prompt(message,"3");
 
-    // Este parte lo hace la cantidad de veces (segun la cantidad de edificios)
-    var message2 = 'Ingrese el número de pisos, color y wireframe del edificio #?: ';
-    var datas2 = prompt(message2,"3,ff0000,false");
+    var numBuildings = parseInt(prompt("Ingrese el número de edificios a crear:", "3"));
 
-    var values = cleanParamsUI(datas2, ',');
+    for (var i = 0; i < numBuildings; i++) {
 
-    alert.log("Numero de pisos: "+values[0]);
-    alert.log("Color: "+values[1]);
-    alert.log("Wireframe: "+values[2]);
+        var data = prompt(
+            "Ingrese el número de pisos, color y wireframe del edificio #" + (i + 1),
+            "3,ff0000,false"
+        );
 
-    drawElement();
-}
+        var values = data.split(",");
 
-function drawElement() {
-    // aqui va toda la logica de dibujar el edificio, usando los datos que se ingresaron en el prompt
-    alert("creo el edificio con los datos ingresados");
-}
+        var floors = parseInt(values[0]);
+        var color = parseInt(values[1], 16);
+        var wireframe = values[2] === "true";
 
-function cleanParamsUI(datos, marker) {
-    value = datos.split(marker);
-    for(var i=0; i<value.length; i++){
-        value[i] = parseFloat(value[i]);
+        drawElement(i * 5, floors, color, wireframe);
     }
-    return value;
+}
+
+function drawElement(xPos, floors, color, wireframe) {
+
+    var floorHeight = 1.5;
+
+    for (var i = 0; i < floors; i++) {
+
+        var geometry = new THREE.BoxGeometry(2, floorHeight, 2);
+
+        var material = new THREE.MeshBasicMaterial({
+            color: color,
+            wireframe: wireframe
+        });
+
+        var floor = new THREE.Mesh(geometry, material);
+
+        floor.position.x = xPos;
+        floor.position.y = (i * floorHeight) + floorHeight / 2;
+
+        scene.add(floor);
+
+        createWindows(xPos, i, floorHeight);
+    }
+}
+
+function createWindows(xPos, floorIndex, floorHeight) {
+
+    var windowGeometry = new THREE.PlaneGeometry(0.5, 0.5);
+
+    var windowMaterial = new THREE.MeshBasicMaterial({
+        color: 0x87CEEB,
+        side: THREE.DoubleSide
+    });
+
+    var windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
+
+    windowMesh.position.set(
+        xPos,
+        (floorIndex * floorHeight) + 0.75,
+        1.01
+    );
+
+    scene.add(windowMesh);
 }
